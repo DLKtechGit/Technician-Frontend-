@@ -20,6 +20,28 @@ const Chemicals = () => {
   const [isNoneSelected, setIsNoneSelected] = useState(false);
   const [loader, setLoader] = useState(false);
 
+
+  useEffect(() => {
+    const handlePopState = (event) => {
+      event.preventDefault();
+      window.history.pushState(null, null, window.location.href);
+    };
+
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = ''; 
+    };
+
+    navigate("/chemical/list");
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [navigate]);
+
   useEffect(() => {
     getChemicals();
   }, []);

@@ -227,7 +227,7 @@ const TaskDetails = () => {
       <Model
         show={startTask}
         modalTitle="Start Task"
-        modalContent="Are you sure you want to start the task ?"
+        modalContent="Are you sure you want to start the task?"
         onClose={handleClose}
         onConfirm={handleScan}
       />

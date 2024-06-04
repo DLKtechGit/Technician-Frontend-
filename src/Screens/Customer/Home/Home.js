@@ -2,8 +2,7 @@ import React from 'react'
 import Menus from "../../Customer/Home/Menus/Menus"
 import Caroseuls from '../../../Reusable/Caroseuls'
 import { Heading } from '../../../Reusable/Headings/Heading'
-import OurServices from '../Services/OurServices/OurServices'
-import ServiceHistory from '../Services/ServiceHistory/ServiceHistory'
+import AllServicesHistory from '../Services/ServiceHistory/AllServicesHistory/AllServicesHistory'
 
 const Home = () => {
     return (
@@ -19,7 +18,8 @@ const Home = () => {
                 <OurServices />
             </section> */}
             <section>
-                <ServiceHistory />
+                <AllServicesHistory/>
+                {/* <ServiceHistory /> */}
             </section>
         </div>
     )

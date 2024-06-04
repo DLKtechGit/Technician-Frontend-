@@ -9,6 +9,8 @@ import { IoIosArrowBack } from "react-icons/io";
 import { DatePicker, Space, Select } from "antd";
 import ApiService from "../../../../../Services/TaskServices";
 import moment from "moment";
+import { SubHeading } from "../../../../../Reusable/Headings/Heading";
+import Loader from "../../../../../Reusable/Loader";
 
 const { Option } = Select;
 
@@ -18,6 +20,8 @@ const AllServicesHistory = ({ setFilteredData }) => {
   const userID = useMemo(() => (userData ? userData._id : ""), [userData]);
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
+  const [loader,setLoader] = useState(false)
+
   const navigate = useNavigate();
   const [data, setData] = useState([]);
 
@@ -28,24 +32,26 @@ const AllServicesHistory = ({ setFilteredData }) => {
   }, [userID]);
 
   const getAllTasks = async () => {
+    setLoader(true)
+
     try {
       const allTasksResponse = await ApiService.TaskList();
       const allTasks = allTasksResponse.data.Results;
       const technicianTasks = allTasks.filter((task) => task.customerId === userID);
       const taskData = technicianTasks.flatMap((item) => item.technicians.map((technician) => technician.tasks));
       const customerTasks = taskData.flatMap((tasks) => {
-        return tasks
+        return tasks;
       });
-      // customerTasks && customerTasks.map((data) => {
-      //   console.log("customerTasks",data.QrCodeCategory);
-      // })
       setData(customerTasks);
       setFilteredData(customerTasks);
     } catch (error) {
       console.error("Error fetching tasks:", error);
     }
-  };
+    finally{
+      setLoader(false)
 
+    }
+  };
 
   const onBack = () => {
     navigate("/home");
@@ -71,14 +77,43 @@ const AllServicesHistory = ({ setFilteredData }) => {
     );
   });
 
+  const displayedData = location.pathname === "/home" ? filteredData.slice(0, 2) : filteredData;
+
   const onFinish = (taskId) => {
-    console.log("taskId",taskId);
     navigate("/specificHistory", { state: { taskId } });
   };
 
+  const onhandleClick = () => {
+    navigate("/home/allservicesHistory");
+  };
+
   return (
-    <div className="">
-      <Menus title="All Services" />
+
+    
+    <div>
+
+{loader && (
+      <Loader show={loader}/>
+      
+    )} 
+
+
+      {location.pathname !== "/home" && <Menus title="All Services" />}
+      {location.pathname === "/home" && (
+        <div className="p-3">
+          <div>
+            <SubHeading subHeading="Services" />
+          </div>
+          <div
+            className="subHeadingRightText d-flex justify-content-end p-2"
+            onClick={onhandleClick}
+            style={{ cursor: "pointer" }}
+          >
+            View All
+          </div>
+        </div>
+      )}
+{location.pathname !== "/home" &&
       <div className="d-flex flex-column">
         <div className="d-flex flex-row">
           <div className="col-2">
@@ -88,30 +123,35 @@ const AllServicesHistory = ({ setFilteredData }) => {
             <Heading heading="All Services History" />
           </div>
         </div>
-      </div>
-      <div className="d-flex justify-content-end p-3">
-        <Space direction="vertical">
-          <DatePicker onChange={onChangeMonth} picker="month" />
-          <Select
-            placeholder="Select Status"
-            style={{ width: 150 }}
-            onChange={onChangeStatus}
-          >
-            <Option value="All">All</Option>
-            <Option value="Yet to Start">Yet to Start</Option>
-            <Option value="ongoing">Ongoing</Option>
-            <Option value="completed">Completed</Option>
-            {/* Add other status options as needed */}
-          </Select>
-        </Space>
-      </div>
+      </div>}
+      {location.pathname !== "/home" && (
+        <div className="d-flex justify-content-end p-3">
+          <Space direction="vertical">
+            <DatePicker onChange={onChangeMonth} picker="month" />
+            <Select
+              placeholder="Select Status"
+              style={{ width: 150 }}
+              onChange={onChangeStatus}
+            >
+              <Option value="All">All</Option>
+              <Option value="start">Yet to Start</Option>
+              <Option value="ongoing">Ongoing</Option>
+              <Option value="completed">Completed</Option>
+              {/* Add other status options as needed */}
+            </Select>
+          </Space>
+        </div>
+      )}
       <div className="p-3">
-        {filteredData.length === 0 ? (
+        {displayedData.length === 0 ? (
           <div>No service history found</div>
         ) : (
-          filteredData.map((entry, index) => {
-            const QrCodeCategory = entry.QrCodeCategory
-            // console.log("entry",entry);
+          displayedData.map((entry, index) => {
+            const AllQrCodeCategory = entry.QrCodeCategory;
+            const AllnoqrcodeService = entry.noqrcodeService;
+
+            const QrCodeCategory = AllQrCodeCategory.length > 0 ? AllQrCodeCategory : AllnoqrcodeService;
+
             return (
               <div
                 key={index}
@@ -123,38 +163,46 @@ const AllServicesHistory = ({ setFilteredData }) => {
                     {moment(entry.startDate).format("DD-MM-YYYY")}
                   </div>
                   <div className="ServiceHistoryStatus px-2">
-                    {entry.status}
+                    {entry.status == 'start' ? <span style={{color:"darkorange",textTransform:"capitalize",fontWeight:600}}>Yet to Start</span> : <span style={{color:"green",textTransform:"capitalize",fontWeight:600}}>{entry.status}</span>}
                   </div>
                 </div>
                 <hr style={{ margin: "0px" }} />
                 <div className="col-9 mt-2 p-1 mb-2">
-                  {
-                    QrCodeCategory && QrCodeCategory.length > 0 && (
-                      QrCodeCategory.map((serviceName, index) => {
-                        const category = serviceName.category;
-                        return (
-                          <div key={index} className="mb-2 padding1 px-4">
-                            <div>
-                              <div className="fonts13 textLeft" style={{ fontWeight: "700" }}>
-                                {category} :
-                              </div>
-                              {serviceName.subCategory.map((subItem, subIndex) => (
-                                <div key={subIndex} className="mt-1 d-flex flex-row justify-content-between align-items-center">
+                  {QrCodeCategory &&
+                    QrCodeCategory.length > 0 &&
+                    QrCodeCategory.map((serviceName, index) => {
+                      const category = serviceName.category;
+                      return (
+                        <div key={index} className="mb-2 padding1 px-4">
+                          <div>
+                            <div
+                              className="fonts13 textLeft"
+                              style={{ fontWeight: "700" }}
+                            >
+                              {category} :
+                            </div>
+                            {serviceName.subCategory.map(
+                              (subItem, subIndex) => (
+                                <div
+                                  key={subIndex}
+                                  className="mt-1 d-flex flex-row justify-content-between align-items-center"
+                                >
                                   <div className="d-flex align-items-center fonts13 textLeft px-2">
                                     {subIndex + 1}. {subItem}
                                   </div>
                                 </div>
-                              ))}
-                            </div>
+                              )
+                            )}
                           </div>
-                        );
-                      })
-                    )
-                  }
-
+                        </div>
+                      );
+                    })}
                 </div>
                 <div className="col-12 d-flex align-items-center justify-content-center mb-3">
-                  <div style={{ fontSize: "12px" }} className="col-12 d-flex justify-content-center">
+                  <div
+                    style={{ fontSize: "12px" }}
+                    className="col-12 d-flex justify-content-center"
+                  >
                     <button
                       type="button"
                       className="btn pestBtn"
@@ -165,7 +213,7 @@ const AllServicesHistory = ({ setFilteredData }) => {
                   </div>
                 </div>
               </div>
-            )
+            );
           })
         )}
       </div>

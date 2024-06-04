@@ -9,19 +9,17 @@ const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Prevent going back to the previous page
     const handlePopState = (event) => {
       event.preventDefault();
       window.history.pushState(null, null, window.location.href);
     };
 
-    // Prevent page reload
     const handleBeforeUnload = (event) => {
       event.preventDefault();
-      event.returnValue = ''; // Chrome requires returnValue to be set
+      event.returnValue = ''; 
     };
 
-    window.history.pushState(null, null, window.location.href);
+    navigate("/tech/home");
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('beforeunload', handleBeforeUnload);
 

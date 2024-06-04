@@ -82,6 +82,8 @@ const ServiceHistory = () => {
       <hr/>
       <div className="d-flex flex-row mb-2">
         <div className="col-9 mt-2 px-3 p-1">
+        
+
           {tasks[0].QrCodeCategory.map((item, innerIndex) => (
             <React.Fragment key={innerIndex}>
               {item.subCategory.map((data, subIndex) => (

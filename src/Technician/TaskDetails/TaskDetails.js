@@ -26,10 +26,6 @@ const TaskDetails = () => {
     (state) => state?.task?.task?.selectedTaskId
   );
 
-  console.log("state", state);
-
-  console.log("selectedTaskIDData", selectedTaskIDData);
-
   const customerDetailsData = useSelector(
     (state) => state?.task?.task?.customerDetails
   );
@@ -56,10 +52,11 @@ const TaskDetails = () => {
   const [subid, setSubid] = useState("");
   const [qrDetails, setQrDetails] = useState();
   const [loader, setLoader] = useState(false);
+  const [othertechhide, setOtherTechHide] = useState(true);
+  const [rodentQrdetails,setRodentQrdetails] = useState()
+
 
   const [qrparID, setQrperID] = useState({});
-  console.log("selectedTaskData", selectedTaskData);
-  console.log("subid", subid);
 
   const navigate = useNavigate();
 
@@ -68,7 +65,7 @@ const TaskDetails = () => {
   }, [state]);
 
   useEffect(() => {
-    const subID = state._id;
+    const subID = state?._id;
     setSubid(subID);
   }, [state]);
 
@@ -92,8 +89,6 @@ const TaskDetails = () => {
     }
   }, [selectedTaskData]);
 
-  console.log("qrparID", qrparID);
-
   const getTaskById = async () => {
     const titleId = taskItemId ? taskItemId : state?.taskId;
     setLoader(true);
@@ -106,6 +101,7 @@ const TaskDetails = () => {
         (e) => e._id === titleId
       );
       setselectedTaskData(finaldata[0]);
+      finaldata[0]?.otherTechnicianName  ? setOtherTechHide(false) : setOtherTechHide(true);
       const taskData = finaldata[0]?.qrDetails;
       const rodentProData = taskData.filter(
         (data) => data.serviceName === "Rodent Pro"
@@ -167,8 +163,6 @@ const TaskDetails = () => {
     });
   }, [selectedTaskData, selectedTaskIDData, titlesData]);
 
-  console.log("selectedTaskData", selectedTaskData);
-
   const handleAddTeamMemberClick = () => {
     setShowForm(true);
   };
@@ -187,6 +181,7 @@ const TaskDetails = () => {
 
   const handleScan = async () => {
     setLoader(true);
+    debugger
     const currentDate = moment().format("DD-MM-YYYY");
     const currentTime = moment().format("HH:mm");
     setOngoing("ongoing");
@@ -196,15 +191,16 @@ const TaskDetails = () => {
       const response = await ApiService.UpdateStatus({
         taskId: taskId,
         titleId: titleId,
+        subcatId: state._id,
         taskItemId: taskItemId,
         status: "ongoing",
         taskItemStatus: "ongoing",
         technicianStartDate: technicianStartDate,
         technicianStartTime: technicianStartTime,
+
       });
 
       if (response && response.status === 200) {
-        toast.success("Task started successfully");
         const res = await ApiService.GetGeneraltrueStatus({
           taskItemId,
         });
@@ -245,6 +241,11 @@ const TaskDetails = () => {
     }
   };
 
+  const handleCancel = () => {
+    setOtherTech('');
+    setShowForm(false);
+  }
+
   const handleAdd = async (event) => {
     setLoader(true);
     event.preventDefault();
@@ -256,10 +257,11 @@ const TaskDetails = () => {
       });
 
       if (response && response.status === 200) {
-        toast.success("Other technician's name added successfully.");
+        setOtherTechHide(false);
+        toast.success("Other technician name added successfully.");
       } else {
         console.error(
-          `Error updating other technician's name. Status code: ${
+          `Error updating other technician name. Status code: ${
             response ? response.status : "unknown"
           }`
         );
@@ -281,6 +283,7 @@ const TaskDetails = () => {
   const [rodentId, setRodentId] = useState(null);
 
   const handleSkipQRCode = async (rodentId) => {
+
     setRodentId(rodentId);
     setShowModal(true);
   };
@@ -290,10 +293,19 @@ const TaskDetails = () => {
     setShowModal(false);
   };
 
+  useEffect(() => {
+    const data = selectedTaskData.qrDetails && selectedTaskData.qrDetails.filter((e) => {
+      return e.serviceName === 'Rodent Pro'; // Added return statement
+    });
+    console.log('dataaaaaa', data);
+    setRodentQrdetails(data)
+  }, [selectedTaskData]);
+
   const handleConfirmModal = async () => {
+    debugger
     setLoader(true);
     try {
-      const getdata = selectedTaskData && selectedTaskData.qrDetails[0].titles;
+      const getdata = rodentQrdetails[0 ].titles;
       const response = await ApiService.GetRodentSkipStatusfalse({
         taskItemId,
       });
@@ -639,14 +651,14 @@ const TaskDetails = () => {
                 </div>
               </div>
               <div>
-                <button
+                { othertechhide && <button
                   type="button"
                   style={{ fontSize: "13px" }}
                   onClick={handleAddTeamMemberClick}
                   className="btn btn-outline-secondary mt-3 "
                 >
                   Add Team Member
-                </button>
+                </button> }
               </div>
 
               {showForm && (
@@ -677,6 +689,13 @@ const TaskDetails = () => {
                       >
                         Add{" "}
                       </button>
+                      <button
+                        className="btn btn-outline-secondary fonts12 mt-2 mb-2 mx-3"
+                        onClick={handleCancel}
+                        style={{ fontSize: "13px", height: "auto" }}
+                      >
+                        Cancel{" "}
+                      </button>
                     </div>
                   </form>
                 </div>
@@ -705,7 +724,7 @@ const TaskDetails = () => {
       <Models
         show={startTask}
         modalTitle="Start Task"
-        modalContent="Are you sure want to start the task ?"
+        modalContent="Are you sure want to start the task?"
         onClose={handleClose}
         onConfirm={handleScan}
       />
@@ -715,7 +734,7 @@ const TaskDetails = () => {
         <Modal.Header closeButton>
           <Modal.Title>Confirm Skip</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Are you sure you want to skip this item?</Modal.Body>
+        <Modal.Body>Are you sure you want to skip this task?</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseModal}>
             Cancel

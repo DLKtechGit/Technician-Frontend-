@@ -15,6 +15,7 @@ const CompletedTasks = () => {
   // const [date, setDate] = useState('');
   // const [selectedDate, setSelectedDate] = useState(null);
   const [customerName, setCustomerName] = useState([]);
+  const [selectedTaskDatas, setSelectedTaskDatas] = useState([]);
   const selectedTaskData = useSelector(
     (state) => state?.task?.task?.selectedTask
   );
@@ -32,13 +33,27 @@ const CompletedTasks = () => {
   const [loader, setLoader] = useState(false);
 
   const [selectedMonth, setSelectedMonth] = useState(null);
-  console.log("completedTasks", completedTasks);
 
   const userData = useSelector((state) => state.user.userData.email);
 
-  const handleViewDetails = (task) => {
-    setSelectedTask(task);
+  const handleViewDetails = async (taskItemId) => {
+    const selectedTaskDatas = await getAllTasksData(taskItemId);
+    setSelectedTaskDatas(selectedTaskDatas);
+    setSelectedTask(taskItemId);
     setShowModal(true);
+  };
+
+
+  const getAllTasksData = async (id) => {
+    setLoader(true);
+    try {
+      const response = await Apiservice.GetTaskStatus(id);
+      return response?.data?.selectedTask;
+    } catch (error) {
+      console.error("Unable to start the task:", error);
+    } finally {
+      setLoader(false);
+    }
   };
 
   const closeModal = () => {
@@ -121,8 +136,7 @@ const CompletedTasks = () => {
         </div>
         {filteredData !== undefined &&
           filteredData.map((task, index) => {
-            // console.log("task",task.QrCodeCategory);
-            const QrCodeCategory = task.QrCodeCategory;
+            const QrCodeCategory = task?.QrCodeCategory?.length > 0 ? task?.QrCodeCategory : task?.noqrcodeService;
             return (
               <>
                 {
@@ -136,7 +150,9 @@ const CompletedTasks = () => {
                           {" "}
                           Customer ----- {task.companyName}{" "}
                         </div>
-                        <p style={{ fontSize: "10px" }}> 27-04-2024 </p>
+                        <p style={{ fontSize: "10px" }}> {moment(task.startDate).format(
+        "DD-MM-YYYY"
+      )} </p>
                       </div>
 
                       <div className="col-12 d-md-flex flex-md-column justify-content-start align-items-center px-3 mt-2 p-2">
@@ -208,7 +224,7 @@ const CompletedTasks = () => {
           <>
             <div
               className="d-flex flex-column align-items-center mt-2"
-              // style={{ padding: "5px 20px 5px 20px" }}
+            // style={{ padding: "5px 20px 5px 20px" }}
             >
               <div className="col-12 d-flex flex-row">
                 <div className="col-5 d-flex align-items-center">
@@ -221,20 +237,27 @@ const CompletedTasks = () => {
                   :{" "}
                 </div>
                 <div className="col-7 d-flex flex-column justify-content-start align-items-start">
-                  {filteredData.map((task) => {
-                    const QrCodeCategory = task.QrCodeCategory;
-                    return (
-                      QrCodeCategory &&
-                      QrCodeCategory.map((category, index) => {
-                        const subCategory = category.subCategory;
-                        return subCategory.map((subItem, subIndex) => (
+                  {selectedTaskDatas && (
+                    selectedTaskDatas?.QrCodeCategory?.length > 0 ? (
+                      selectedTaskDatas?.QrCodeCategory.map((category, index) => (
+                        category.subCategory.map((subItem, subIndex) => (
                           <div key={subIndex} style={{ fontSize: "12px" }}>
                             {subIndex + 1}. {subItem}
                           </div>
-                        ));
-                      })
-                    );
-                  })}
+                        ))
+                      ))
+                    ) : (
+                      selectedTaskDatas.noqrcodeService && (
+                        selectedTaskDatas.noqrcodeService.map((category, index) => (
+                          category.subCategory.map((subItem, subIndex) => (
+                            <div key={subIndex} style={{ fontSize: "12px" }}>
+                              {subIndex + 1}. {subItem}
+                            </div>
+                          ))
+                        ))
+                      )
+                    )
+                  )}
                 </div>
               </div>
 
@@ -247,7 +270,7 @@ const CompletedTasks = () => {
                 <div className="col-1"> : </div>
                 <div className="col-7 d-flex justify-content-start align-items-center">
                   <text style={{ fontSize: "12px" }} className="allHistText">
-                    {companyName}
+                    {selectedTaskDatas?.companyName}
                   </text>
                 </div>
               </div>
@@ -261,7 +284,7 @@ const CompletedTasks = () => {
                 <div className="col-1"> : </div>
                 <div className="col-7 d-flex justify-content-start align-items-center">
                   <text style={{ fontSize: "12px" }} className="allHistText">
-                    {moment(completedTasks.startDate).format("DD-MM-YYYY")}
+                    {moment(selectedTaskDatas?.startDate).format("DD-MM-YYYY")}
                   </text>
                 </div>
               </div>
@@ -275,14 +298,12 @@ const CompletedTasks = () => {
                 <div className="col-1"> : </div>
                 <div className="col-7 d-flex justify-content-start align-items-center">
                   <text style={{ fontSize: "12px" }} className="allHistText">
-                    {completedTasks.map((data) => {
-                      return data.completedDetails.chemicalsName.map(
-                        (chemical, index) => (
+                    {selectedTaskDatas?.completedDetails?.chemicalsName.map((chemical,index) => {
+                      return (
                           <div key={index}>
                             {index + 1}. {chemical}
                           </div>
                         )
-                      );
                     })}
                   </text>
                 </div>
@@ -297,7 +318,7 @@ const CompletedTasks = () => {
                 <div className="col-1"> : </div>
                 <div className="col-7 d-flex justify-content-start align-items-center">
                   <text style={{ fontSize: "12px" }} className="allHistText">
-                    {selectedTaskData.description}
+                    {selectedTaskDatas?.description}
                   </text>
                 </div>
               </div>
@@ -311,13 +332,11 @@ const CompletedTasks = () => {
                 <div className="col-1"> : </div>
                 <div className="col-7 d-flex justify-content-start align-items-center">
                   <text style={{ fontSize: "12px" }} className="allHistText">
-                    {completedTasks.map((data, index) => (
-                      <div key={index}>
-                        {data.completedDetails.recommendation
-                          ? data.completedDetails.recommendation
+                      <div>
+                        {selectedTaskDatas?.completedDetails?.recommendation
+                          ? selectedTaskDatas?.completedDetails?.recommendation
                           : "-"}
                       </div>
-                    ))}
                   </text>
                 </div>
               </div>

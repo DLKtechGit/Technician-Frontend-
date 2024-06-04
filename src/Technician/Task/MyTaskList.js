@@ -32,21 +32,21 @@ const MyTaskList = () => {
   const [showModal, setShowModal] = useState(false);
   const [subcagorytId, setSubcagorytId] = useState("");
   const [skipTaskId, setSkipTaskId] = useState("");
-const  [loader,setLoader] = useState(false)
+  const [loader, setLoader] = useState(false)
 
-// useEffect(() => {
-//   const handlePopState = (event) => {
-//     event.preventDefault();
-//     navigate(0); 
-//   };
+  // useEffect(() => {
+  //   const handlePopState = (event) => {
+  //     event.preventDefault();
+  //     navigate(0); 
+  //   };
 
-//   window.history.pushState(null, null, window.location.href);
-//   window.addEventListener('popstate', handlePopState);
+  //   window.history.pushState(null, null, window.location.href);
+  //   window.addEventListener('popstate', handlePopState);
 
-//   return () => {
-//     window.removeEventListener('popstate', handlePopState);
-//   };
-// }, [navigate]);
+  //   return () => {
+  //     window.removeEventListener('popstate', handlePopState);
+  //   };
+  // }, [navigate]);
 
 
   useEffect(() => {
@@ -72,7 +72,6 @@ const  [loader,setLoader] = useState(false)
         const alldatas = alls.filter(
           (item) => item.status === "start" || "ongoing"
         );
-        console.log("alldatas", alldatas);
         setTaskDetails(alldatas);
       });
   }, [customer]);
@@ -132,8 +131,6 @@ const  [loader,setLoader] = useState(false)
 
       const finalTaskData = res.data.data[0];
 
-      console.log("res", finalTaskData);
-
       if (res.status === 200) {
         setCustomerData(finalTaskData);
         console.log("task fetched successfully");
@@ -142,7 +139,7 @@ const  [loader,setLoader] = useState(false)
       }
     } catch (error) {
       console.error("Error occurred while fetching tasks:", error);
-    }finally{
+    } finally {
       setLoader(false)
     }
   };
@@ -182,13 +179,19 @@ const  [loader,setLoader] = useState(false)
       const GeneralTrueresponse = await ApiService.GetGeneraltrueStatus({
         taskItemId: skipTaskId,
       });
+      const GeneralNoQrresponse = await ApiService.GetNoQrGeneralFalseStatus({
+        taskItemId: skipTaskId,
+      });
+      const GeneralNoQrTrueresponse = await ApiService.GetNoQrGeneraltrueStatus({
+        taskItemId: skipTaskId,
+      });
       const selectedTask = taskDetails.find((task) => task._id === skipTaskId);
       if (
         Generalresponse?.data?.subCategoryStatusWithFalseStatus?.length > 1 ||
         (!selectedTask?.Rodentstatus &&
           selectedTask?.QrCodeCategory?.length > 1 &&
           GeneralTrueresponse?.data?.subCategoryStatusWithFalseStatus.length >
-            0)
+          0)
       ) {
         const res = await ApiService.UpdateSkipStatus({
           taskId: selectedTaskId,
@@ -210,6 +213,27 @@ const  [loader,setLoader] = useState(false)
           subcatId: subcagorytId,
         });
         navigate("/chemical/list");
+      } else if (selectedTask?.noqrcodeService?.length > 0 && GeneralNoQrresponse.data?.subCategoryStatusWithFalseStatus?.length > 1) {
+        const res = await ApiService.UpdateNoQrSkipStatus({
+          taskId: selectedTaskId,
+          taskItemId: skipTaskId,
+          status: true,
+          skip: true,
+          subcatId: subcagorytId,
+        });
+        setTaskskip(true);
+        setShowModal(false);
+      } else if (
+        GeneralNoQrTrueresponse.data?.subCategoryStatusWithFalseStatus?.length >= 1
+      ) {
+        const res = await ApiService.UpdateNoQrSkipStatus({
+          taskId: selectedTaskId,
+          taskItemId: skipTaskId,
+          status: true,
+          skip: true,
+          subcatId: subcagorytId,
+        });
+        navigate("/chemical/list");
       } else {
         toast.error("Can't able to skip this task");
         setShowModal(false);
@@ -217,20 +241,20 @@ const  [loader,setLoader] = useState(false)
     } catch (error) {
       console.error("Error occurred while handling skip status:", error);
     }
-    finally{
+    finally {
       setLoader(false)
     }
   };
 
   return (
-    
+
     <>
 
-    
-{loader && (
-      <Loader show={loader}/>
-      
-    )} 
+
+      {loader && (
+        <Loader show={loader} />
+
+      )}
 
       <div className="tech-full">
         <Menus />
@@ -241,12 +265,7 @@ const  [loader,setLoader] = useState(false)
               // console.log("taskDetails", task.Rodentstatus);
               const QrCodeCategory = task.QrCodeCategory;
               const noqrcodeService = task.noqrcodeService;
-              
-              console.log('noqrcodeService',noqrcodeService);
-
               const serviceList = QrCodeCategory.length > 0 ? QrCodeCategory : noqrcodeService;
-
-console.log('serviceList',serviceList);
               return (
                 <React.Fragment key={index}>
                   {["start", "ongoing"].includes(task.status) && (
@@ -263,7 +282,6 @@ console.log('serviceList',serviceList);
                       <div className="col-12 d-md-flex flex-md-column justify-content-start align-items-center px-3 mt-2 p-2">
                         {serviceList?.map((serviceName, index) => {
                           const category = serviceName.category;
-                          console.log("serviceName.subCategory",category)
                           const isLastItem =
                             index === serviceList.length - 1;
                           return (
@@ -286,58 +304,58 @@ console.log('serviceList',serviceList);
                                       </div>
                                       <div className="col-3 d-flex justify-content-center gap-2">
                                         {category === "Rodent Pro" &&
-                                        subItem === "Rodent Pro" &&
-                                        !task.Rodentstatus && (
-                                          <button
-                                            onClick={() =>
-                                              handleViewDetails(
-                                                task._id,
-                                                subItem,
-                                                category,
-                                                serviceName.subCategoryStatus[
-                                                  subIndex
-                                                ]._id
-                                              )
-                                            }
-                                            className="btn btn-primary btn-sm"
-                                            style={{ fontSize: "10px" }}
-                                            type="button"
-                                          >
-                                            Start
-                                          </button>
-                                        )
+                                          subItem === "Rodent Pro" &&
+                                          !task.Rodentstatus && (
+                                            <button
+                                              onClick={() =>
+                                                handleViewDetails(
+                                                  task._id,
+                                                  subItem,
+                                                  category,
+                                                  serviceName.subCategoryStatus[
+                                                    subIndex
+                                                  ]._id
+                                                )
+                                              }
+                                              className="btn btn-primary btn-sm"
+                                              style={{ fontSize: "10px" }}
+                                              type="button"
+                                            >
+                                              Start
+                                            </button>
+                                          )
                                           ? !task.Rodentstatus && (
-                                              <button
-                                                onClick={() =>
-                                                  handleViewDetails(
-                                                    task._id,
-                                                    subItem,
-                                                    category,
-                                                    serviceName
-                                                      .subCategoryStatus[
-                                                      subIndex
-                                                    ]._id
-                                                  )
-                                                }
-                                                className="btn btn-primary btn-sm"
-                                                style={{ fontSize: "10px" }}
-                                                type="button"
-                                              >
-                                                Start
-                                              </button>
-                                            )
+                                            <button
+                                              onClick={() =>
+                                                handleViewDetails(
+                                                  task._id,
+                                                  subItem,
+                                                  category,
+                                                  serviceName
+                                                    .subCategoryStatus[
+                                                    subIndex
+                                                  ]._id
+                                                )
+                                              }
+                                              className="btn btn-primary btn-sm"
+                                              style={{ fontSize: "10px" }}
+                                              type="button"
+                                            >
+                                              Start
+                                            </button>
+                                          )
                                           : category == "Rodent Pro" && serviceName.subCategoryStatus[
-                                              subIndex
-                                            ].status === true && (
-                                              <button
-                                                className="btn btn-success btn-sm px-2"
-                                                style={{ fontSize: "10px" }}
-                                                type="button"
-                                                disabled={true}
-                                              >
-                                                Completed
-                                              </button>
-                                            )}
+                                            subIndex
+                                          ].status === true && (
+                                            <button
+                                              className="btn btn-success btn-sm px-2"
+                                              style={{ fontSize: "10px" }}
+                                              type="button"
+                                              disabled={true}
+                                            >
+                                              Completed
+                                            </button>
+                                          )}
                                         {category !== "Rodent Pro" &&
                                           serviceName.subCategoryStatus[
                                             subIndex
@@ -372,9 +390,9 @@ console.log('serviceList',serviceList);
                                             {serviceName.subCategoryStatus[
                                               subIndex
                                             ].skip === true &&
-                                            serviceName.subCategoryStatus[
-                                              subIndex
-                                            ].status === true ? (
+                                              serviceName.subCategoryStatus[
+                                                subIndex
+                                              ].status === true ? (
                                               <button
                                                 className="btn btn-danger btn-sm px-2"
                                                 style={{ fontSize: "10px" }}
@@ -385,8 +403,8 @@ console.log('serviceList',serviceList);
                                                 Skipped
                                               </button>
                                             ) : serviceName.subCategoryStatus[
-                                                subIndex
-                                              ].skip === false &&
+                                              subIndex
+                                            ].skip === false &&
                                               serviceName.subCategoryStatus[
                                                 subIndex
                                               ].status === true ? (
@@ -397,7 +415,7 @@ console.log('serviceList',serviceList);
                                                 key={subIndex}
                                                 disabled={true}
                                               >
-                                                Scanned
+                                                { QrCodeCategory.length > 0 ? 'Scanned' : 'Completed' }
                                               </button>
                                             ) : (
                                               <button
@@ -430,7 +448,7 @@ console.log('serviceList',serviceList);
                                               </Modal.Header>
                                               <Modal.Body>
                                                 Are you sure you want to skip
-                                                this item?
+                                                this task?
                                               </Modal.Body>
                                               <Modal.Footer>
                                                 <Button
@@ -474,121 +492,3 @@ console.log('serviceList',serviceList);
 };
 
 export default MyTaskList;
-
-
-// const QrCodeCategory = task.QrCodeCategory;
-// const noqrcodeService = task.noqrcodeService;
-// return (
-//   <React.Fragment key={index}>
-//     {["start", "ongoing"].includes(task.status) && (
-//       <div className="card mb-3 mt-3 d-flex flex-column align-items-center" key={task._id}>
-//         <div className="col-12 taskcompanyheader">
-//           <div className="fonts13 fontWeight p-2">
-//             {`Start Date ----`} {moment(task.startDate).format("DD-MMM-YYYY")}
-//           </div>
-//         </div>
-//         <div className="col-12 d-md-flex flex-md-column justify-content-start align-items-center px-3 mt-2 p-2">
-//           {QrCodeCategory && QrCodeCategory.length > 0 ? (
-//             QrCodeCategory.map((serviceName, index) => {
-//               const category = serviceName.category;
-//               // console.log("serviceName.subCategory",serviceName._id)
-//               const isLastItem = index === QrCodeCategory.length - 1;
-//               return (
-//                 <div key={index} className="mb-2">
-//                   <div>
-//                     <div className="fonts13 textLeft" style={{ fontWeight: "700" }}>
-//                       {category} :
-//                     </div>
-//                     {serviceName.subCategory.map((subItem, subIndex) => (
-//                       <div key={subIndex} className="mt-1 d-flex flex-row justify-content-between align-items-center">
-//                         <div className="d-flex align-items-center fonts13 textLeft p-2">
-//                           {subIndex + 1}. {subItem}
-//                         </div>
-//                         <div className="col-3 d-flex justify-content-center gap-2">
-//                           {(category === "Rodent Pro" && !searchParamsData && subItem === 'Rodent Pro') && (
-//                             <button
-//                               onClick={() => handleViewDetails(task._id, subItem, category)}
-//                               className="btn btn-primary btn-sm"
-//                               style={{ fontSize: "10px" }}
-//                               type="button"
-//                             >
-//                               Start
-//                             </button>
-//                           )}
-//                           {(category !== "Rodent Pro" && serviceName.subCategoryStatus[subIndex].status === false) && (
-//                             <>
-//                               <button
-//                                 onClick={() => handleViewDetails(task._id, serviceName.subCategoryStatus[subIndex].subCategory, category)}
-//                                 className="btn btn-primary btn-sm"
-//                                 style={{ fontSize: "10px" }}
-//                                 type="button"
-//                                 key={subIndex}
-//                               >
-//                                 Start
-//                               </button>
-
-//                             </>
-//                           )}
-//                           <button
-//                             onClick={() => handleSkipStatus(task._id, serviceName.subCategoryStatus[subIndex]._id)}
-//                             className="btn btn-secondary btn-sm px-2"
-//                             style={{ fontSize: "10px" }}
-//                             type="button"
-//                             key={subIndex}
-//                           >
-//                             Skip
-//                           </button>
-//                         </div>
-//                       </div>
-//                     ))}
-//                   </div>
-//                   {isLastItem ? "" : <hr />}
-//                 </div>
-//               );
-//             })
-//           ) : (
-//             <>
-//               <div className="fonts13 textLeft" style={{ fontWeight: "700" }}>
-//                 General Pest Control :
-//               </div>
-//               {noqrcodeService && noqrcodeService.map((data, index) => (
-//                 <div className="mb-2" key={index}>
-//                   <div>
-//                     <div className="mt-1 d-flex flex-row justify-content-between align-items-center">
-//                       <div className="d-flex align-items-center fonts13 textLeft p-2">
-//                         {index + 1}. {data.subCategory}
-//                       </div>
-//                       <div className="col-2 d-flex justify-content-center">
-//                         {noqrcodeService[index].status ? (
-//                           <button
-//                             disabled
-//                             className="btn btn-success btn-sm"
-//                             style={{ fontSize: "10px" }}
-//                             type="button"
-//                           >
-//                             Completed
-//                           </button>
-//                         ) : (
-//                           <button
-//                             onClick={() => handleViewDetails(task._id, data.subCategory)}
-//                             className="btn btn-primary btn-sm"
-//                             style={{ fontSize: "10px" }}
-//                             type="button"
-//                           >
-//                             Start
-//                           </button>
-//                         )}
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-//               ))}
-//             </>
-//           )}
-//         </div>
-//       </div>
-//     )}
-
-//   </React.Fragment>
-// );
-// })}

@@ -15,7 +15,7 @@ import Loader from "../../Reusable/Loader";
 const SignnaturePage = () => {
   let navigate = useNavigate()
   const location = useLocation();
-  const { inputFields, recommendation } = location.state;
+  const { inputFields, recommendation } = location?.state;
 
   const techSigRef = useRef();
   const custSigRef = useRef();
@@ -31,7 +31,7 @@ const SignnaturePage = () => {
   const [technicianSigned, setTechnicianSigned] = useState("Not Signed");
   const [customerSigned, setCustomerSigned] = useState("Not Signed");
   const [isLoading, setIsLoading] = useState(false);
-  const [loader,setLoader] = useState(false)
+  const [loader, setLoader] = useState(false)
 
   // console.log("signature", signature);
   const dispatch = useDispatch();
@@ -44,7 +44,36 @@ const SignnaturePage = () => {
   const customerDetailsData = useSelector(
     (state) => state?.task?.task?.customerDetails
   );
-  // console.log('customerDetailsData', customerDetailsData.email);
+
+
+  useEffect(() => {
+    const handlePopState = (event) => {
+      event.preventDefault();
+      window.history.pushState(null, null, window.location.href);
+    };
+
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    navigate("/signature/page", {
+      state: {
+        inputFields:location?.state?.inputFields,
+        recommendation:location?.state?.recommendation,
+        pauseReason:location?.state?.pauseReason,
+        technicianStartDate:location?.state?.technicianStartDate,
+        technicianStartTime:location?.state?.technicianStartTime,
+      },
+    });
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [navigate]);
 
   useEffect(() => {
     const Technician = selectedTaskData?.technicianDetails;
@@ -98,7 +127,7 @@ const SignnaturePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-setLoader(true)
+    setLoader(true)
     const currentTime = moment().format("HH:mm");
     const technicianStartTime = currentTime;
     // const technicianStartTime = new Date();
@@ -138,19 +167,21 @@ setLoader(true)
         // link.download = "document.pdf";
         // link.click();
         // URL.revokeObjectURL(blobUrl);
-        navigate("/tech/home");
-        toast.success("Pause Reason Submitted successfully");
+        toast.success("Task Completed!");
+        setTimeout(() => {
+          navigate("/tech/home");
+        }, 1000);
         setIsLoading(false);
       } else {
         console.error(
-          `Error: Pause Reason Submitted Failed. Status code: ${response ? response.status : "unknown"
+          `Error: Task not Completed!. Status code: ${response ? response.status : "unknown"
           }`
         );
       }
     } catch (error) {
-      console.error("Unable to start the task:", error);
+      console.error("Unable to complete the task:", error);
     }
-    finally{
+    finally {
       setLoader(false)
     }
   };
@@ -159,10 +190,10 @@ setLoader(true)
   return (
     <div>
 
-{loader && (
-      <Loader show={loader}/>
-      
-    )}  
+      {loader && (
+        <Loader show={loader} />
+
+      )}
 
       <Menus />
       <div>

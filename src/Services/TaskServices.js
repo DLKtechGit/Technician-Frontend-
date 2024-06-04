@@ -17,12 +17,15 @@ const GetSubCategoryStatusWithFalseStatusUrl = "task/getSubCategoryStatusWithFal
 const updateNoQRSubCategoryStatusUrl = "task/updateNoQRSubCategoryStatus"
 const getNoSubCategoryFalseStatusUrl = "task/getNoSubCategoryFalseStatus"
 const UpdateSkipStatusURL = "task/updateSkipStatus"
+const UpdateNoQrSkipStatusURL = "task/updateNoQrSkipStatus"
 const UpdateRodentSkipStatusURL = "task/updateRodentSkipStatus"
 const GetRodentSkipStatusfalseURL = "task/getRodentSkipStatusfalse"
 const GetGeneralFalseStatusURL = "task/getGeneralFalseStatus"
+const GetNoQrGeneralFalseStatusURL = "task/getNoQrGeneralFalseStatus"
 const GetRodentQrTrueURL = "task/getRodentQrTrue"
 const UpdateRodentStatusMainURL = "task/updateRodentStatusMain"
 const GetGeneraltrueStatusURL = "task/getGeneraltrueStatus"
+const GetNoQrGeneraltrueStatusURL = "task/getNoQrGeneraltrueStatus"
 const GetRodentStatusURL = "task/getRodentStatus"
 const pauseDurationTimeUrl = "task/pauseduration"
 const getTaskByCustoomerIdUrl = "task/getTaskByCustomerId/"
@@ -96,6 +99,10 @@ const UpdateSkipStatus = (data) => {
     // console.log("data",data);
     return https.Post(UpdateSkipStatusURL,data); 
 }
+const UpdateNoQrSkipStatus = (data) => {     
+    // console.log("data",data);
+    return https.Post(UpdateNoQrSkipStatusURL,data); 
+}
 const UpdateRodentSkipStatus = (data) => {     
     // console.log("data",data);
     return https.Post(UpdateRodentSkipStatusURL,data); 
@@ -108,9 +115,17 @@ const GetGeneralFalseStatus = (data) => {
     // console.log("data",data);
     return https.Post(GetGeneralFalseStatusURL,data); 
 }
+const GetNoQrGeneralFalseStatus = (data) => {     
+    // console.log("data",data);
+    return https.Post(GetNoQrGeneralFalseStatusURL,data); 
+}
 const GetGeneraltrueStatus = (data) => {     
     // console.log("data",data);
     return https.Post(GetGeneraltrueStatusURL,data); 
+}
+const GetNoQrGeneraltrueStatus = (data) => {     
+    // console.log("data",data);
+    return https.Post(GetNoQrGeneraltrueStatusURL,data); 
 }
 const GetRodentQrTrue = (data) => {     
     // console.log("data",data);
@@ -150,8 +165,11 @@ export default {
     UpdateNoQRSubCategoryStatus:UpdateNoQRSubCategoryStatus,
     GetNoSubCategoryFalseStatus:GetNoSubCategoryFalseStatus,
     UpdateSkipStatus:UpdateSkipStatus,
+    UpdateNoQrSkipStatus:UpdateNoQrSkipStatus,
+    GetNoQrGeneralFalseStatus:GetNoQrGeneralFalseStatus,
     UpdateRodentSkipStatus:UpdateRodentSkipStatus,
     GetRodentSkipStatusfalse:GetRodentSkipStatusfalse,
+    GetNoQrGeneraltrueStatus:GetNoQrGeneraltrueStatus,
     GetGeneralFalseStatus:GetGeneralFalseStatus,
     GetRodentQrTrue:GetRodentQrTrue,
     UpdateRodentStatusMain:UpdateRodentStatusMain,

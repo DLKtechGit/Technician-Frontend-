@@ -13,8 +13,6 @@ import Loader from "../../Reusable/Loader";
 const StartTask = () => {
   const dispatch = useDispatch();
   const location = useLocation();
-  const technicianStartTime = location.state?.technicianStartTime;
-  const technicianStartDate = location.state?.technicianStartDate;
   const serviceNames = location.state?.serviceName;
   const finialTitleData = location.state?.finialTitleData;
   const [time, setTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
@@ -42,34 +40,32 @@ const StartTask = () => {
   const [loader, setLoader] = useState(false);
   let navigate = useNavigate()
 
-  // useEffect(() => {
-  //   // Prevent going back to the previous page
-  //   const handlePopState = (event) => {
-  //     if (location.pathname === '/start/task') {
-  //       event.preventDefault();
-  //       window.history.pushState(null, null, window.location.href);
-  //     }
-  //   };
+ 
+  useEffect(() => {
+    const handlePopState = (event) => {
+      event.preventDefault();
+      window.history.pushState(null, null, window.location.href);
+    };
 
-  //   // Prevent page reload
-  //   const handleBeforeUnload = (event) => {
-  //     if (location.pathname === '/start/task') {
-  //       event.preventDefault();
-  //       event.returnValue = ''; // Chrome requires returnValue to be set
-  //     }
-  //   };
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = ''; 
+    };
 
-  //   if (location.pathname === '/start/task') {
-  //     window.history.pushState(null, null, window.location.href);
-  //     window.addEventListener('popstate', handlePopState);
-  //     window.addEventListener('beforeunload', handleBeforeUnload);
-  //   }
+    navigate("/start/task", {
+      state: {
+        subid: location?.state?.subid,
+        serviceName: location.state?.serviceName,
+      },
+    });
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
-  //   return () => {
-  //     window.removeEventListener('popstate', handlePopState);
-  //     window.removeEventListener('beforeunload', handleBeforeUnload);
-  //   };
-  // }, [location.pathname]);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [navigate]);
 
   
   const selectedTaskIDData = useSelector(
@@ -80,15 +76,11 @@ const StartTask = () => {
   );
   const cat = useSelector((state) => state.CategoryReducer.category);
 
-  console.log(location.state.subCatId);
-
-  useEffect(() => {
-    const rodentid = location.state.subCatId;
-    console.log("id", rodentid);
-    setRodentSubId(rodentid);
-  }, [location]);
-
-  console.log("rodendtid", rodentSubID);
+  // useEffect(() => {
+  //   const rodentid = location?.state?.subCatId;
+  //   setRodentSubId(rodentid);
+  //   console.log(rodentid);
+  // }, [rodentSubID]);
 
   useEffect(() => {
     setTaskItemID(selectedTaskData?._id);
@@ -97,13 +89,12 @@ const StartTask = () => {
     (state) => state?.task?.task?.selectedTask
   );
 
-  useEffect(() => {
-    const subid = location?.state?.subid;
-    // console.log('subid',subid);
-    setSubcatId(subid);
-  }, [location]);
-
-  console.log("subCatId", subCatId);
+  // useEffect(() => {
+  //   debugger;
+  //   const subid = location?.state?.subid;
+  //   setSubcatId(subid);
+  //   console.log(subCatId);
+  // }, [location]);
 
   useEffect(() => {
     fetchData();
@@ -112,28 +103,22 @@ const StartTask = () => {
     setLoader(true);
     try {
       const getdata = await getAllTasksData(selectedTaskDetailData?._id);
-      console.log("getdata", getdata);
       if (getdata) {
         setTaskItemID(getdata?._id);
         setTaskID(selectedTaskIDData);
         setGetdata(getdata);
         const serviceName = getdata?.serviceName;
         setSubCatNames(serviceName);
-        console.log("subname", subCatName);
         let arr = [];
         let foundQrId = false;
         getdata?.qrDetails?.forEach((data) => {
           const dataTitles = data.titles;
-          console.log("titeleleeee", dataTitles);
           if (cat === data.serviceName) {
             dataTitles &&
               dataTitles.forEach((item) => {
                 if (finialTitleData === item.title) {
                   setQrId(item._id);
                   foundQrId = true;
-                  console.log("item", item);
-
-                  console.log("item", item);
                   if (finialTitleData === item.title) {
                     setQrId(item._id);
                     foundQrId = true;
@@ -226,16 +211,20 @@ const StartTask = () => {
   };
   const handleStop = async () => {
     setLoader(true)
+    debugger
     try {
-      
-    
-    
     setIsRunning(false);
     setTime({ hours: 0, minutes: 0, seconds: 0 });
     const Generalresponse = await ApiService.GetGeneralFalseStatus({
       taskItemId,
     });
     const GeneralTrueresponse = await ApiService.GetGeneraltrueStatus({
+      taskItemId,
+    });
+    const GeneralNoQrresponse = await ApiService.GetNoQrGeneralFalseStatus({
+      taskItemId,
+    });
+    const GeneralNoQrTrueresponse = await ApiService.GetNoQrGeneraltrueStatus({
       taskItemId,
     });
     const selectedTaskData = await getAllTasksData(taskItemId);
@@ -247,7 +236,7 @@ const StartTask = () => {
       taskId,
       taskItemId,
       status: true,
-      subcatId: subCatId ? subCatId : rodentSubID,
+      subcatId: location?.state?.subid,
     });
     if (
       (!selectedTaskData?.Rodentstatus &&
@@ -281,6 +270,13 @@ const StartTask = () => {
       location.state?.serviceName != "Rodent Pro"
     ) {
       navigate("/tech/home", { state: { status: "Ongoing" } });
+    }else if(selectedTaskData?.noqrcodeService?.length > 0 && GeneralNoQrresponse.data?.subCategoryStatusWithFalseStatus?.length > 1){
+      navigate("/tech/home", { state: { status: "Ongoing" } });
+    }else if(selectedTaskData?.noqrcodeService?.length > 0 && GeneralNoQrresponse.data?.subCategoryStatusWithFalseStatus?.length == 1 && GeneralNoQrTrueresponse.data?.subCategoryStatusWithFalseStatus?.length >= 1){
+      navigate("/tech/home", { state: { status: "Ongoing" } });
+    }else if(selectedTaskData?.Rodentstatus && selectedTaskData?.QrCodeCategory?.length == 2 && Generalresponse.data?.subCategoryStatusWithFalseStatus?.length == 1 && GeneralTrueresponse.data?.subCategoryStatusWithFalseStatus?.length >= 1 &&
+      location.state?.serviceName == "Rodent Pro"){
+      navigate("/tech/home", { state: { status: "Ongoing" } });
     } else {
       navigate("/chemical/list");
     }
@@ -300,7 +296,6 @@ const StartTask = () => {
 
     suball &&
       suball.map((it) => {
-        console.log("dddd", it);
         const subsId = it;
         setqrcodeStatusId(subsId);
         // console.log('subcatstats',qrStatusId);
@@ -373,12 +368,11 @@ const StartTask = () => {
     const seconds = duration.seconds();
     const alldata = `${hours}:${minutes}:${seconds}`;
     // setPauseDuration(`${hours}:${minutes}:${seconds}`);
-
     try {
       const response = await ApiService.UpdatePauseReason({
         taskItemId,
         taskId,
-        subCatId: subCatId ? subCatId : rodentSubID,
+        subCatId: location?.state?.subid,
         pauseReason,
         pauseTiming: alldata,
       });

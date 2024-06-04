@@ -6,14 +6,18 @@ import { useNavigate, useLocation } from "react-router-dom";
 import moment from "moment";
 import ApiService from "../../../../../Services/TaskServices";
 import Caroseuls from "../../../../../Reusable/Caroseuls";
+import Loader from "../../../../../Reusable/Loader";
+import { saveAs } from 'file-saver';
+
+
 
 const SpecificHistory = () => {
   const location = useLocation();
   const taskId = location.state?.taskId;
   const [task, setTask] = useState([]);
-  const [pdf,setPdf] = useState('')
-  console.log('task',pdf);
+  const [finalTasks, setFinalTasks] = useState([])
   const navigate = useNavigate();
+  const [loader, setLoader] = useState(false)
 
   const onFinish = () => {
     navigate(-1);
@@ -25,44 +29,69 @@ const SpecificHistory = () => {
     }
   }, [taskId]);
 
-  useEffect(()=>{
-const pdfs = task.map((e)=> e.pdf)
-setPdf(pdfs)
-  },[task])
-
   const getTaskById = async () => {
+    setLoader(true)
     try {
       const response = await ApiService.GetTaskByID(taskId);
       const taskData = response.data.task;
       setTask([taskData]);
     } catch (error) {
       console.error("Error fetching task:", error);
+    } finally {
+      setLoader(false)
+
     }
   };
 
-  const downloadPdf = () => {
+  // https://node.1croreads.com/
+
+  // const downloadPdf = async(pdf) => {
+  //   setLoader(true)
+  //   const pdfUrl = `https://node.1croreads.com/${pdf}`
+  //       const pdfResponse = await fetch(pdfUrl);
+  //       const pdfBlob = await pdfResponse.blob();
+  //       const blobUrl = URL.createObjectURL(pdfBlob);
+  //       const link = document.createElement("a");
+  //       link.href = blobUrl;
+  //       link.download = "document.pdf";
+  //       link.click();
+  //       URL.revokeObjectURL(blobUrl);
+
+  //       setLoader(false)
+  // };
+
+
+const downloadPdf = (pdf) => {
     const byteCharacters = atob(pdf);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
     const byteArray = new Uint8Array(byteNumbers);
     const blob = new Blob([byteArray], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "report.pdf";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+
+    // Use FileSaver.js to save the file
+    saveAs(blob, "report.pdf");
+};
 
 
-  
+  useEffect(() => {
+    const taskss = task.map((data) => { return data.technicians[0] })
+    taskss.map((item) => {
+      const data = item.tasks
+      const finaldata = data.filter((e) => e._id === taskId)
+      setFinalTasks(finaldata)
+    })
+  }, [task])
+
+
 
   return (
     <>
+      {loader && (
+        <Loader show={loader} />
+
+      )}
       <div className="history-full">
         <Menus title="Crawling Insects" />
         <div className="d-flex flex-row">
@@ -72,13 +101,19 @@ setPdf(pdfs)
           <div className="col-8 d-flex justify-content-center mt-1">
             <Heading heading="Service Details" />
           </div>
-          
+
         </div>
-        
+
         <div>
+
+
           <>
-            {task.map((data, idx) => {
-              const QrCodeCategory = data.QrCodeCategory
+            {finalTasks.map((data, idx) => {
+              const AllQrCodeCategory = data.QrCodeCategory
+              const AllnoqrcodeService = data.noqrcodeService
+
+              const QrCodeCategory = AllQrCodeCategory.length > 0 ? AllQrCodeCategory : AllnoqrcodeService;
+
               return (
                 <>
                   <div className="padding1">
@@ -86,6 +121,7 @@ setPdf(pdfs)
                       <div className="col-7">
                         {
                           QrCodeCategory && QrCodeCategory.length > 0 && (
+
                             QrCodeCategory.map((serviceName, index) => {
                               const category = serviceName.category;
                               return (
@@ -109,7 +145,7 @@ setPdf(pdfs)
                         }
                       </div>
                       <div className="col-5 ">
-                        <Caroseuls showDots={false}/>
+                        <Caroseuls showDots={false} />
                       </div>
                     </div>
                   </div>
@@ -148,7 +184,7 @@ setPdf(pdfs)
                           <div className="col-2"> : </div>
                           <div className="col-5 d-flex justify-content-start align-items-center">
                             <text style={{ fontSize: "12px" }} className="allHistText">
-                              {data.status}
+                              {data.status == 'start' ? <span style={{color:"darkorange",textTransform:"capitalize",fontWeight:600}}>Yet to Start</span> : <span style={{color:"green",textTransform:"capitalize",fontWeight:600}}>{data.status}</span>}
                             </text>
                           </div>
                         </div>
@@ -174,14 +210,14 @@ setPdf(pdfs)
                         >
                           <div className="col-6 d-flex align-items-center">
                             <h6 style={{ fontSize: "12px" }} className="allHistTitle">
-                              Other Technician Name{" "}
+                              Technician Name{" "}
                             </h6>
                           </div>
                           <div className="col-2"> : </div>
                           <div className="col-5 d-flex justify-content-start align-items-center">
                             <text style={{ fontSize: "12px" }} className="allHistText">
-                              {data.otherTechnicianName ? data.otherTechnicianName : "N/A"}
-                            </text>
+                                  {data.technicianDetails.firstName} {data.technicianDetails.lastName}
+                            </text> 
                           </div>
                         </div>
                         <div
@@ -204,10 +240,13 @@ setPdf(pdfs)
                         </div>
                       </>
                     </div>
-                    <div className="d-flex justify-content-center mt-3">
+                    {data.status === "completed" && (
+                      <div className="d-flex justify-content-center mt-3">
 
-          <button type="button" onClick={downloadPdf} className="btn pestBtn">Download Report</button>
-          </div>
+                        <button type="button" onClick={() => downloadPdf(data.pdf)} className="btn pestBtn">Download Report</button>
+                      </div>
+                    )
+                    }
                   </div>
                 </>
               )

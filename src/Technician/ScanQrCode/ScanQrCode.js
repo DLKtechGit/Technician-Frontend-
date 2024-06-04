@@ -167,7 +167,7 @@ setLoader(true)
 
       // console.log("response", response);
       if (response && response.status === 200) {
-        toast.success("Now you can start the task");
+        //toast.success("Now you can start the task");
         navigate("/start/task", {
           state: {
             ongoing: ongoing,
@@ -175,7 +175,7 @@ setLoader(true)
             technicianStartTime: technicianStartTime,
             serviceName: serviceName,
             finialTitleData: scanData,
-            subCatId: subCatId,
+            subid: subCatId,
           },
         });
       } else {
@@ -295,7 +295,7 @@ setLoader(true)
                   onClick={scanstart}
                   value="ongoing"
                 >
-                  Start ask
+                  Start Task
                 </button>
                 <button
                   type="button"

@@ -76,13 +76,13 @@ const CustomerList = () => {
   const getFormattedStartDate = (task) => {
     if (
       task.technicians.length > 0 &&
-      task.technicians[0].tasks.length > 0 &&
-      task.technicians[0].tasks[0].startDate
+      task.technicians[0].tasks.length > 0 
     ) {
-      const startDate = moment(task.technicians[0].tasks[0].startDate).format(
+      const currentTaskData = task.technicians[0].tasks.filter(task => task.status != 'completed')
+      const startDate = moment(currentTaskData[0].startDate).format(
         "DD-MM-YYYY"
       );
-      const status = task.technicians[0].tasks[0].status;
+      const status = currentTaskData[0].status;
       if (status === "start") {
         return { startDate, status: "Yet to Start" };
       } else {
@@ -163,7 +163,11 @@ const CustomerList = () => {
                       style={{ fontSize: "10px" }}
                     >
                       <span style={{ fontWeight: "700" }}>Status:</span>{" "}
-                      {getFormattedStartDate(task).status}
+                      { getFormattedStartDate(task).status == 'Yet to Start' ?
+                      <span style={{color:"darkorange",textTransform:"capitalize",fontWeight:600}}>{getFormattedStartDate(task).status}</span>
+                      :
+                      <span style={{color:"green",textTransform:"capitalize",fontWeight:600}}>{getFormattedStartDate(task).status}</span>
+                      }
                     </p>
                   </div>
                   <div className="col-2 d-flex justify-content-center">
